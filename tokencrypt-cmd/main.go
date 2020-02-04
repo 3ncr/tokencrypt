@@ -17,10 +17,16 @@ func main() {
 
 	fmt.Print("Enter secret part 1: ")
 	part1, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		log.Fatalln("Error reading secret:", err.Error())
+	}
 	fmt.Println("")
 
 	fmt.Print("Enter secret part 2: ")
 	part2, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		log.Fatalln("Error reading secret:", err.Error())
+	}
 	fmt.Println("")
 
 	var iter int
