@@ -7,11 +7,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/sha3"
 	"io"
 	"strings"
-
-	"golang.org/x/crypto/pbkdf2"
 )
 
 const aes256KeySize = 32
@@ -22,6 +21,8 @@ type EncToken struct {
 	aesgcm cipher.AEAD
 }
 
+// NewTokenCrypt returns a new 3ncr.org encrypter / decrypter.
+// It derives AES-256 key using PBKDF2 with SHA3-256
 func NewTokenCrypt(secret []byte, salt []byte, iter int) (*EncToken, error) {
 	raw := pbkdf2.Key(secret, salt, iter, aes256KeySize, sha3.New256)
 	return NewRawTokenCrypt(raw)
@@ -63,8 +64,8 @@ func (c *EncToken) decrypt(src string) (string, error) {
 	return string(plaintext), nil
 }
 
+// Encrypt3ncr encrypts a string using most recent 3ncr.org version available
 func (c *EncToken) Encrypt3ncr(source string) (string, error) {
-
 	nonce := make([]byte, c.aesgcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return "", fmt.Errorf("rand nounce: %w", err)
@@ -78,6 +79,8 @@ func (c *EncToken) Encrypt3ncr(source string) (string, error) {
 	return headerV1 + base64encode(b.Bytes()), nil
 }
 
+// DecryptIf3ncr decrypts a 3ncr.org string
+// If the string does not starts with 3ncr.org header, it returns the argument unmodified and no error
 func (c *EncToken) DecryptIf3ncr(source string) (string, error) {
 	if !strings.HasPrefix(source, headerV1) {
 		return source, nil
@@ -94,4 +97,3 @@ func base64encode(src []byte) string {
 func base64decode(str string) ([]byte, error) {
 	return base64.StdEncoding.WithPadding(base64.NoPadding).DecodeString(str)
 }
-

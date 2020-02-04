@@ -8,7 +8,6 @@ type testpair struct {
 	decoded, encoded string
 }
 
-
 var tests = []testpair{
 	{"a", "3ncr.org/1#I09Dwt6q05ZrH8GQ0cp+g9Jm0hD0BmCwEdylCh8"},
 	{"test", "3ncr.org/1#Y3/v2PY7kYQgveAn4AJ8zP+oOuysbs5btYLZ9vl8DLc"},
@@ -16,14 +15,12 @@ var tests = []testpair{
 	{"перевірка", "3ncr.org/1#EPw7S5+BG6hn/9Sjf6zoYUCdwlzweeB+ahBIabUD6NogAcevXszOGHz9Jzv4vQ"},
 }
 
-
 func TestBasic(t *testing.T) {
 
 	tc, err := NewTokenCrypt([]byte("a"), []byte("b"), 1000)
 	if err != nil {
 		t.Error(err)
 	}
-
 
 	for _, test := range tests {
 		val, err := tc.DecryptIf3ncr(test.encoded)
@@ -36,14 +33,12 @@ func TestBasic(t *testing.T) {
 	}
 }
 
-
 func TestIdentity(t *testing.T) {
 
 	tc, err := NewTokenCrypt([]byte("a"), []byte("b"), 1)
 	if err != nil {
 		t.Error(err)
 	}
-
 
 	for _, test := range tests {
 		enc, err := tc.Encrypt3ncr(test.decoded)
@@ -60,6 +55,3 @@ func TestIdentity(t *testing.T) {
 	}
 
 }
-
-
-
