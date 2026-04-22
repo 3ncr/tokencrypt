@@ -3,27 +3,28 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/3ncr/tokencrypt"
-	"golang.org/x/crypto/ssh/terminal"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/3ncr/tokencrypt"
+	"golang.org/x/term"
 )
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Print("Enter secret part 1: ")
-	part1, err := terminal.ReadPassword(int(syscall.Stdin))
+	part1, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		log.Fatalln("Error reading secret:", err.Error())
 	}
 	fmt.Println("")
 
 	fmt.Print("Enter secret part 2: ")
-	part2, err := terminal.ReadPassword(int(syscall.Stdin))
+	part2, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		log.Fatalln("Error reading secret:", err.Error())
 	}
@@ -50,6 +51,7 @@ func main() {
 		break
 	}
 
+	//nolint:staticcheck // CLI exposes the legacy PBKDF2-SHA3 KDF for compatibility with existing data.
 	tc, err := tokencrypt.NewTokenCrypt([]byte(part1), []byte(part2), iter)
 	if err != nil {
 		log.Fatalln("Error creating tokencrypt:", err.Error())
