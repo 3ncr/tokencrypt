@@ -22,12 +22,21 @@ type EncToken struct {
 }
 
 // NewTokenCrypt returns a new 3ncr.org encrypter / decrypter.
-// It derives AES-256 key using PBKDF2 with SHA3-256
+// It derives AES-256 key using PBKDF2 with SHA3-256.
+//
+// Deprecated: PBKDF2-SHA3 is the legacy KDF. Derive a 32-byte key yourself and
+// pass it to [NewRawTokenCrypt] — Argon2id for passwords, a single SHA3-256
+// hash for high-entropy inputs. See the 3ncr.org spec Key Derivation section.
+// This constructor is kept for decrypting data produced by earlier versions.
 func NewTokenCrypt(secret []byte, salt []byte, iter int) (*EncToken, error) {
 	raw := pbkdf2.Key(secret, salt, iter, aes256KeySize, sha3.New256)
 	return NewRawTokenCrypt(raw)
 }
 
+// NewRawTokenCrypt returns a new 3ncr.org encrypter / decrypter from a raw
+// 32-byte AES-256 key. Derive the key however you prefer — Argon2id for
+// passwords, a single SHA3-256 hash for high-entropy inputs (random keys, API
+// tokens). See the 3ncr.org spec for recommended parameters.
 func NewRawTokenCrypt(key []byte) (*EncToken, error) {
 	if len(key) != aes256KeySize {
 		return nil, fmt.Errorf("key size too small")
