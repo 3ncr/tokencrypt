@@ -14,9 +14,26 @@ This is a golang implementation.
 
 ## Usage
 
+### Recommended: raw 32-byte key
+
+Pass a 32-byte AES-256 key. Derive it however you prefer — for passwords use
+Argon2id; for high-entropy inputs (random keys, API tokens) a single SHA3-256
+hash is sufficient.
+
+```golang
+key := make([]byte, 32)
+if _, err := rand.Read(key); err != nil { /* ... */ }     // or: load from env / secret store
+tokenCrypt, err := tokencrypt.NewRawTokenCrypt(key)
+```
+
+### Legacy: PBKDF2-SHA3 constructor
+
+The original `(secret, salt, iterations)` constructor is kept for backward
+compatibility with data encrypted by earlier versions. It is deprecated — prefer
+`NewRawTokenCrypt` above for new code.
 
 ```golang  
-tokenCrypt := tokencrypt.NewTokenCrypt(secret, salt, 1000);
+tokenCrypt, err := tokencrypt.NewTokenCrypt(secret, salt, 1000)
 ```
 
 `secret` and `salt` - are encryption keys (technically one of them is key, another is salt, but you need to store them both somewhere, preferably in different places). 
@@ -26,6 +43,8 @@ You can store them any preferred places: environment variables, files, shared me
 `1000` - is a number of PBKDF2 rounds. 
 The more is better and slower. 
 If you are sure that your secrets are long and random, you can keep this value reasonable low.  
+
+### Encrypt / decrypt
 
 After you created an instance, you can just use Encrypt3ncr and DecryptIf3ncr methods:
 
