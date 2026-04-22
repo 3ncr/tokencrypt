@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/sha3"
 	"io"
@@ -17,6 +18,15 @@ const aes256KeySize = 32
 const headerV1 = "3ncr.org/1#"
 const nonceSizeV1 = 12
 
+// Argon2id parameters recommended by the 3ncr.org v1 spec for low-entropy
+// secrets. See https://3ncr.org/1/#kdf.
+const (
+	argon2idMemoryKiB  uint32 = 19456
+	argon2idTime       uint32 = 2
+	argon2idThreads    uint8  = 1
+	argon2idMinSaltLen        = 16
+)
+
 type EncToken struct {
 	aesgcm cipher.AEAD
 }
@@ -24,12 +34,25 @@ type EncToken struct {
 // NewTokenCrypt returns a new 3ncr.org encrypter / decrypter.
 // It derives AES-256 key using PBKDF2 with SHA3-256.
 //
-// Deprecated: PBKDF2-SHA3 is the legacy KDF. Derive a 32-byte key yourself and
-// pass it to [NewRawTokenCrypt] — Argon2id for passwords, a single SHA3-256
-// hash for high-entropy inputs. See the 3ncr.org spec Key Derivation section.
-// This constructor is kept for decrypting data produced by earlier versions.
+// Deprecated: PBKDF2-SHA3 is the legacy KDF, retained for decrypting
+// existing 3ncr.org data. New callers should use [NewArgon2idTokenCrypt]
+// for low-entropy secrets (passwords) or [NewRawTokenCrypt] for
+// high-entropy keys (random 32-byte keys, SHA3-256 of an API token, etc.).
+// See the 3ncr.org spec Key Derivation section.
 func NewTokenCrypt(secret []byte, salt []byte, iter int) (*EncToken, error) {
 	raw := pbkdf2.Key(secret, salt, iter, aes256KeySize, sha3.New256)
+	return NewRawTokenCrypt(raw)
+}
+
+// NewArgon2idTokenCrypt returns a new 3ncr.org encrypter / decrypter
+// whose AES-256 key is derived from secret and salt using Argon2id with
+// the parameters recommended by the 3ncr.org v1 spec for low-entropy
+// secrets (m=19456 KiB, t=2, p=1). salt must be at least 16 bytes.
+func NewArgon2idTokenCrypt(secret []byte, salt []byte) (*EncToken, error) {
+	if len(salt) < argon2idMinSaltLen {
+		return nil, fmt.Errorf("salt must be at least %d bytes", argon2idMinSaltLen)
+	}
+	raw := argon2.IDKey(secret, salt, argon2idTime, argon2idMemoryKiB, argon2idThreads, aes256KeySize)
 	return NewRawTokenCrypt(raw)
 }
 

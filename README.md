@@ -14,11 +14,22 @@ This is a golang implementation.
 
 ## Usage
 
-### Recommended: raw 32-byte key
+Pick a constructor based on the kind of secret you have:
 
-Pass a 32-byte AES-256 key. Derive it however you prefer — for passwords use
-Argon2id; for high-entropy inputs (random keys, API tokens) a single SHA3-256
-hash is sufficient.
+### Recommended: Argon2id (low-entropy secrets)
+
+For passwords or passphrases, use `NewArgon2idTokenCrypt`. It uses the
+parameters recommended by the [3ncr.org v1 spec](https://3ncr.org/1/#kdf):
+m=19456 KiB, t=2, p=1. The salt must be at least 16 bytes.
+
+```golang
+tokenCrypt, err := tokencrypt.NewArgon2idTokenCrypt(secret, salt)
+```
+
+### Recommended: raw 32-byte key (high-entropy secrets)
+
+If you already have a 32-byte AES-256 key (random key, API token hashed to 32
+bytes via SHA3-256, etc.), skip the KDF and pass it in directly.
 
 ```golang
 key := make([]byte, 32)
@@ -29,20 +40,16 @@ tokenCrypt, err := tokencrypt.NewRawTokenCrypt(key)
 ### Legacy: PBKDF2-SHA3 constructor
 
 The original `(secret, salt, iterations)` constructor is kept for backward
-compatibility with data encrypted by earlier versions. It is deprecated — prefer
-`NewRawTokenCrypt` above for new code.
+compatibility with data encrypted by earlier versions. It is deprecated —
+prefer `NewArgon2idTokenCrypt` or `NewRawTokenCrypt` for new code.
 
-```golang  
+```golang
 tokenCrypt, err := tokencrypt.NewTokenCrypt(secret, salt, 1000)
 ```
 
-`secret` and `salt` - are encryption keys (technically one of them is key, another is salt, but you need to store them both somewhere, preferably in different places). 
+`secret` and `salt` are encryption inputs (technically one of them is the key, the other is the salt, but you need to store them both somewhere, preferably in different places).
 
-You can store them any preferred places: environment variables, files, shared memory, drive from hardware serial numbers or MAC addresses. Be creative. 
-
-`1000` - is a number of PBKDF2 rounds. 
-The more is better and slower. 
-If you are sure that your secrets are long and random, you can keep this value reasonable low.  
+You can store them in any preferred places: environment variables, files, shared memory, derived from hardware serial numbers or MAC addresses. Be creative.
 
 ### Encrypt / decrypt
 
