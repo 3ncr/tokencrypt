@@ -2,6 +2,7 @@
 
 [![Lint & Test](https://github.com/3ncr/tokencrypt/actions/workflows/test.yml/badge.svg)](https://github.com/3ncr/tokencrypt/actions/workflows/test.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/3ncr/tokencrypt.svg)](https://pkg.go.dev/github.com/3ncr/tokencrypt)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/3ncr/tokencrypt/badge)](https://scorecard.dev/viewer/?uri=github.com/3ncr/tokencrypt)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [3ncr.org](https://3ncr.org/) is a standard for string encryption / decryption
